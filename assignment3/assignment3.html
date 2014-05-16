@@ -1,0 +1,191 @@
+
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<title>Assignment#3</title>
+	</head>
+	<body>
+	<div id="container">
+		<h1>User Management</h1>
+		<table id="table">
+			<tr id="table-head">
+				<th>ID</th>
+				<th>Full name</th>
+				<th>Username</th>
+				<th>Email</th>
+				<th>Password</th>
+				<th>Actions</th>
+			</tr>
+		</table>
+
+		<form id="form">
+			<div class="item text">
+				<label>Full name:</label>
+				<div class="field"><input type="text" name="fullname" /></div>
+			</div>
+			<div class="item text">
+				<label>Username:</label>
+				<div class="field"><input type="text" name="username" /></div>
+			</div>
+			<div class="item text">
+				<label>Email:</label>
+				<div class="field"><input type="text" name="email" /></div>
+			</div>
+			<div class="item text">
+				<label>Password:</label>
+				<div class="field"><input type="text" name="password" /></div>
+			</div>
+			<div class="button-wrapper">
+				<div class="item button">
+					<div class="field"><input type="button" id="discard" value="Discard" /></div>
+				</div>
+				<div class="item button button-default">
+					<div class="field"><input type="submit" id="save" value="Save" /></div>
+				</div>
+			</div>
+			<input type="hidden" name="user_id" value="0" />
+		</form>	
+	</div>
+	</body>
+</html>
+<script>
+	var Users = {
+		index: window.localStorage.getItem("Users:index"),
+		$table: document.getElementById("table"),
+		$form: document.getElementById("form"),
+		$button_save: document.getElementById("save"),
+		$button_discard: document.getElementById("discard"),
+
+		init: function() {
+
+			// initialize storage index
+			if (!Users.index) {
+				window.localStorage.setItem("Users:index", Users.index = 1);
+			}
+
+			// initialize form
+			Users.$form.reset();
+			Users.$button_discard.addEventListener("click", function(event) {
+				Users.$form.reset();
+				Users.$form.user_id.value = 0;
+			}, true);
+			Users.$form.addEventListener("submit", function(event) {
+				var newUser = {
+					id: parseInt(this.user_id.value),
+					fullname: this.fullname.value,
+					username: this.username.value,
+					email: this.email.value,
+					password: this.password.value
+				};
+				if (newUser.id == 0) { // add
+					Users.storeAdd(newUser);
+					Users.tableAdd(newUser);
+				}
+				else { // edit
+					Users.storeEdit(newUser);
+					Users.tableEdit(newUser);
+				}
+
+				this.reset();
+				this.user_id.value = 0;
+				event.preventDefault();
+			}, true);
+
+			// initialize table
+			if (window.localStorage.length - 1) {
+				var Users_list = [], i, key;
+				for (i = 0; i < window.localStorage.length; i++) {
+					key = window.localStorage.key(i);
+					if (/Users:\d+/.test(key)) {
+						Users_list.push(JSON.parse(window.localStorage.getItem(key)));
+					}
+				}
+
+				if (Users_list.length) {
+					Users_list
+						.sort(function(a, b) {
+							return a.id < b.id ? -1 : (a.id > b.id ? 1 : 0);
+						})
+						.forEach(Users.tableAdd);
+				}
+			}
+			Users.$table.addEventListener("click", function(event) {
+				var op = event.target.getAttribute("data-op");
+				if (/edit|remove/.test(op)) {
+					var newUser = JSON.parse(window.localStorage.getItem("Users:"+ event.target.getAttribute("data-id")));
+					if (op == "edit") {
+						Users.$form.fullname.value = newUser.fullname;
+						Users.$form.username.value = newUser.username;
+						Users.$form.email.value = newUser.email;
+						Users.$form.password.value = newUser.password;
+						Users.$form.user_id.value = newUser.id;
+					}
+					else if (op == "remove") {
+						if (confirm('Are you sure you want to remove "'+ newUser.fullname + '" from your Users?')) {
+							Users.storeRemove(newUser);
+							Users.tableRemove(newUser);
+						}
+					}
+					event.preventDefault();
+				}
+			}, true);
+		},
+
+		storeAdd: function(newUser) {
+			newUser.id = Users.index;
+			window.localStorage.setItem("Users:index", ++Users.index);
+			window.localStorage.setItem("Users:"+ newUser.id, JSON.stringify(newUser));
+		},
+		storeEdit: function(newUser) {
+			window.localStorage.setItem("Users:"+ newUser.id, JSON.stringify(newUser));
+		},
+		storeRemove: function(newUser) {
+			window.localStorage.removeItem("Users:"+ newUser.id);
+		},
+
+		tableAdd: function(newUser) {
+			var $tr = document.createElement("tr"), $td, key;
+			for (key in newUser) {
+				if (newUser.hasOwnProperty(key)) {
+					$td = document.createElement("td");
+					$td.appendChild(document.createTextNode(newUser[key]));
+					$tr.appendChild($td);
+				}
+			}
+			$td = document.createElement("td");
+			$td.innerHTML = '<a data-op="edit" data-id="'+ newUser.id +'">Edit</a> | <a data-op="remove" data-id="'+ newUser.id +'">Remove</a>';
+			$tr.appendChild($td);
+			$tr.setAttribute("id", "newUser-"+ newUser.id);
+			Users.$table.appendChild($tr);
+		},
+		tableEdit: function(newUser) {
+			var $tr = document.getElementById("newUser-"+ newUser.id), $td, key;
+			$tr.innerHTML = "";
+			for (key in newUser) {
+				if (newUser.hasOwnProperty(key)) {
+					$td = document.createElement("td");
+					$td.appendChild(document.createTextNode(newUser[key]));
+					$tr.appendChild($td);
+				}
+			}
+			$td = document.createElement("td");
+			$td.innerHTML = '<a data-op="edit" data-id="'+ newUser.id +'">Edit</a> | <a data-op="remove" data-id="'+ newUser.id +'">Remove</a>';
+			$tr.appendChild($td);
+		},
+		tableRemove: function(newUser) {
+			Users.$table.removeChild(document.getElementById("newUser-"+ newUser.id));
+		}
+	};
+	Users.init();
+
+	var css='#container{ margin: 0 auto; width: 50%; }h1 { text-align: center; }a { color: #0068D2; cursor: pointer; }a:link, a:visited { text-decoration: none; color: #0068D2; }a:hover, a:active { text-decoration: underline; color: #0068D2; }body { align: center; font: 12px/18px "Lucida Grande", "Lucida Sans Unicode", sans-serif; }#table { border-collapse: collapse; }#table, #table th, #table td { padding: 8px 16px; text-align: center; border: 0px solid #B9BABE; }#table th { font-weight: bold; font-size: 14px; color: #29344B; }#table td { color: #000; }#table tr:nth-child(2n) { background: #E8EDFF; }#form { margin: 0 auto; padding: 10px; }.text input, .button input { padding: 5px; margin: 0; border: 1px solid #ccc; -moz-border-radius: 2px; -webkit-border-radius: 2px; border-radius: 2px; }#form .item { margin: 3px 0; }#form label, #form .field { display: inline-block; color: #0C0B07; }#form label { width: 110px; font-weight: bold; text-align: right; color: #666; }#form .text input { width: 176px; padding: 3px; }#form .button { display: inline-block; }#form .button-wrapper { padding-left: 113px; }.button input { padding: 4px 8px; color: #343434; background-color: #fdfdfd; background: -moz-linear-gradient(#fdfdfd, #e1e1e1); background: -webkit-gradient(linear, 0 0, 0 100%, from(#fdfdfd), to(#e1e1e1)); }.button-default input { font-weight: bold; color: #fff; background-color: #7ca0c7; background: -moz-linear-gradient(#acc6e1, #7ca0c7); background: -webkit-gradient(linear, 0 0, 0 100%, from(#acc6e1), to(#7ca0c7)); border-color: #5b80b2; }';
+	style=document.createElement('style');
+
+	if (style.styleSheet)
+	    style.styleSheet.cssText=css;
+	else 
+	    style.appendChild(document.createTextNode(css));
+	
+	document.getElementsByTagName('head')[0].appendChild(style);
+</script>

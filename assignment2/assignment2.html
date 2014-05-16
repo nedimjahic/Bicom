@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Assignment#2</title>
+		<script>
+			var body = document.createElement("body");
+			document.body = body;
+
+			var table = document.createElement("table");
+			var tbody = document.createElement("tbody");
+			
+			for (var i = 0; i <= 8; i++) {
+
+            	// create row
+	            var row = document.createElement("tr");
+
+	            for (var j = 0; j < 3; j++) {
+
+	                // create cell         
+		            var cell = document.createElement("td"); 
+
+                    // Attach data and define attributes
+		            if(i == 0) {
+		            	if(j == 0)
+		             		cell.innerHTML = "ID";
+		             	else if(j == 1)
+		             		cell.innerHTML = "Name";
+		             	else
+		             		cell.innerHTML = "Email";
+		             	cell.className = "header";
+		            }
+		            else{
+			            if( j == 0){
+			             	cell.innerHTML = i;
+			             	if(i%2 == 0)
+			             		cell.className = "even";
+			             	else
+			             		cell.className = "odd";
+			            }
+			            else if( j == 1){
+			             	cell.innerHTML = "name "+i;
+			             	if(i%2 == 0)
+			             		cell.className = "even";
+			             	else
+			             		cell.className = "odd";	
+			            }
+			            else if( j == 2 ){
+			             	var anchor = document.createElement('a');
+							anchor.href = "mailto:row" + i + "@email.com";
+							anchor.innerHTML = "row"+i+"@email.com";
+							cell.appendChild(anchor);
+							if(i%2 == 0)
+			             		cell.className = "even";
+			             	else
+			             		cell.className = "odd";
+		             	}
+	            	} 
+	             	row.appendChild(cell);
+	            }
+	            tbody.appendChild(row);
+	        }
+
+
+	        table.appendChild(tbody);
+	        body.appendChild(table);
+
+            //define style and add it to head
+	        var css='.header{border:2px solid black}.even:hover{background-color:#00ff00}.odd:hover{background-color:#ff0000}table{border-collapse:collapse;text-align:center;}td{padding:4px;border:2px dotted black;min-width:25px;}';
+			style=document.createElement('style');
+
+			if (style.styleSheet)
+			    style.styleSheet.cssText=css;
+			else 
+			    style.appendChild(document.createTextNode(css));
+			
+			document.getElementsByTagName('head')[0].appendChild(style);
+		</script>
+	</head>
+</html>
